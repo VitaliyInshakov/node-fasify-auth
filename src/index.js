@@ -7,6 +7,7 @@ const { connectDb } = require("./db");
 const { registerUser } = require("./accounts/register");
 const { loginUser } = require("./accounts/login");
 const { logUserIn } = require("./accounts/logUserIn");
+const { getUserFromCookies } = require("./accounts/user");
 
 const app = fastify();
 
@@ -36,6 +37,24 @@ async function startApp() {
                 if (isAuthorized)  {
                     await logUserIn(userId, request, reply);
                     reply.send({ data: "User Logged In" });
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        app.get("/test", {}, async (request, reply) => {
+            try {
+                const user = await getUserFromCookies(request);
+
+                if (user?._id) {
+                    reply.send({
+                        data: user,
+                    });
+                } else {
+                    reply.send({
+                        data: "User Lookup Failed",
+                    });
                 }
             } catch (e) {
                 console.error(e);

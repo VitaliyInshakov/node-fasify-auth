@@ -7,6 +7,7 @@ const { connectDb } = require("./db");
 const { registerUser } = require("./accounts/register");
 const { loginUser } = require("./accounts/login");
 const { logUserIn } = require("./accounts/logUserIn");
+const { logUserOut } = require("./accounts/logUserOut");
 const { getUserFromCookies } = require("./accounts/user");
 
 const app = fastify();
@@ -23,8 +24,13 @@ async function startApp() {
 
         app.post("/api/register", {}, async (request, reply) => {
             try {
-                const id = await registerUser(request.body.email, request.body.password);
+                const userId = await registerUser(request.body.email, request.body.password);
+                if (userId) {
+                    await loginUser(request.body.email, request.body.password);
+                    reply.send({ data: { status: "SUCCESS", userId } });
+                }
 
+                reply.send({ data: { status: "FAILED"} });
             } catch (e) {
                 console.error(e);
             }
@@ -36,16 +42,28 @@ async function startApp() {
 
                 if (isAuthorized)  {
                     await logUserIn(userId, request, reply);
-                    reply.send({ data: "User Logged In" });
+                    reply.send({ data: { status: "SUCCESS", userId } });
                 }
+
+                reply.send({ data: { status: "FAILED"} });
             } catch (e) {
                 console.error(e);
             }
         });
 
+        app.post("/api/logout", async (request, reply) => {
+            try {
+                await logUserOut(request, reply);
+                reply.send({ data: { status: "SUCCESS" } });
+            } catch (e) {
+                console.error(e);
+                reply.send({ data: { status: "FAILED"} });
+            }
+        });
+
         app.get("/test", {}, async (request, reply) => {
             try {
-                const user = await getUserFromCookies(request);
+                const user = await getUserFromCookies(request, reply);
 
                 if (user?._id) {
                     reply.send({

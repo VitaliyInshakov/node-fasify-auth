@@ -2,6 +2,7 @@ require("./env");
 const fastify = require("fastify");
 const fastifyStatic = require("fastify-static");
 const fastifyCookie = require("fastify-cookie");
+const fastifyCors = require("fastify-cors");
 const path = require("path");
 const { connectDb } = require("./db");
 const { registerUser } = require("./accounts/register");
@@ -14,6 +15,14 @@ const app = fastify();
 
 async function startApp() {
     try {
+        app.register(fastifyCors, {
+            origin: [
+                /\.nodeauth.dev/,
+                "https://nodeauth.dev",
+            ],
+            credentials: true,
+        });
+
         app.register(fastifyStatic, {
             root: path.join(__dirname, "public"),
         });

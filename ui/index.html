@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Title</title>
+</head>
+<body>
+<h3>Register Form</h3>
+<form id="register-form">
+    <input type="email" name="email">
+    <input type="password" name="password">
+    <button type="submit">Register</button>
+</form>
+
+<br />
+<hr />
+<br />
+
+<h3>Login Form</h3>
+<form id="login-form">
+    <input type="email" name="email">
+    <input type="password" name="password">
+    <button type="submit">Log In</button>
+</form>
+
+<br />
+<hr />
+<br />
+
+<button onclick="logout()">Log Out</button>
+
+<script>
+    ;(() => {
+        const form = document.getElementById("register-form");
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            try {
+                const values = Object.values(form).reduce((acc, field) => {
+                    if (field.name) {
+                        acc[field.name] = field.value;
+                    }
+                    return acc;
+                }, {});
+
+                const res = await fetch("https://api.nodeauth.dev/api/register", {
+                    method: "POST",
+                    body: JSON.stringify(values),
+                    credentials: "include",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        const loginForm = document.getElementById("login-form");
+        loginForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            try {
+                const values = Object.values(loginForm).reduce((acc, field) => {
+                    if (field.name) {
+                        acc[field.name] = field.value;
+                    }
+                    return acc;
+                }, {});
+
+                const res = await fetch("https://api.nodeauth.dev/api/login", {
+                    method: "POST",
+                    body: JSON.stringify(values),
+                    credentials: "include",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        async function logout() {
+            try {
+                await fetch("https://api.nodeauth.dev/api/logout", {
+                    method: "POST",
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    })()
+</script>
+</body>
+</html>

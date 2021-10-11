@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
 const { createTokens } = require("./tokens");
 
-const JWTSignature = process.env.JWT_SIGNATURE;
+const { ROOT_DOMAIN, JWT_SIGNATURE } = process.env;
 
 async function getUserFromCookies(request, reply) {
     try {
@@ -11,7 +11,7 @@ async function getUserFromCookies(request, reply) {
 
         if (request?.cookies?.accessToken) {
             const { accessToken } = request.cookies;
-            const decodedAccessToken = jwt.verify(accessToken, JWTSignature);
+            const decodedAccessToken = jwt.verify(accessToken, JWT_SIGNATURE);
             return user.findOne({
                 _id: ObjectId(decodedAccessToken?.userId),
             });
@@ -19,7 +19,7 @@ async function getUserFromCookies(request, reply) {
 
         if (request?.cookies?.refreshToken) {
             const { refreshToken } = request.cookies;
-            const { sessionToken } = jwt.verify(refreshToken, JWTSignature);
+            const { sessionToken } = jwt.verify(refreshToken, JWT_SIGNATURE);
             const currentSession = await session.findOne({ sessionToken });
 
             if (currentSession.valid) {
@@ -44,14 +44,17 @@ async function refreshTokens(sessionToken, userId, reply) {
         reply
             .setCookie("refreshToken", refreshToken, {
                 path: "/",
-                domain: "localhost",
+                domain: ROOT_DOMAIN,
                 httpOnly: true,
+                secure: true,
                 expires: refreshExpires,
-            }).setCookie("accessToken", accessToken, {
-            path: "/",
-            domain: "localhost",
-            httpOnly: true,
-        });
+            })
+            .setCookie("accessToken", accessToken, {
+                path: "/",
+                domain: ROOT_DOMAIN,
+                httpOnly: true,
+                secure: true,
+            });
     } catch (e) {
         console.error(e);
     }

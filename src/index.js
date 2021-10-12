@@ -10,6 +10,7 @@ const { loginUser } = require("./accounts/login");
 const { logUserIn } = require("./accounts/logUserIn");
 const { logUserOut } = require("./accounts/logUserOut");
 const { getUserFromCookies } = require("./accounts/user");
+const { MailSender } = require("./mail/index");
 
 const app = fastify();
 

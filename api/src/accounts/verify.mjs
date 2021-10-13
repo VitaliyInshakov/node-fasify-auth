@@ -1,7 +1,7 @@
-const crypto = require("crypto");
+import crypto from "crypto";
 const { ROOT_DOMAIN, JWT_SIGNATURE } = process.env;
 
-async function createVerifyEmailToken(email) {
+export async function createVerifyEmailToken(email) {
     try {
         const authString = `${JWT_SIGNATURE}:${email}`;
         return crypto.createHash("sha256").update(authString).digest("hex");
@@ -10,7 +10,7 @@ async function createVerifyEmailToken(email) {
     }
 }
 
-async function createVerifyEmailLink(email) {
+export async function createVerifyEmailLink(email) {
     try {
         const emailToken = await createVerifyEmailToken(email);
         const URIEncodedEmail = encodeURIComponent(email);
@@ -19,5 +19,3 @@ async function createVerifyEmailLink(email) {
         console.error(e);
     }
 }
-
-module.exports = { createVerifyEmailToken, createVerifyEmailLink };

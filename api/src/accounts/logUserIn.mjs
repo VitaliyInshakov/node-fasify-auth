@@ -1,7 +1,7 @@
-const { createSession } = require("./session");
-const { refreshTokens }  = require("./user");
+import { createSession } from "./session.mjs";
+import { refreshTokens } from "./user.mjs";
 
-async function logUserIn(userId, request, reply) {
+export async function logUserIn(userId, request, reply) {
     const connectionInfo =  {
         ip: request.ip,
         userAgent: request.headers["user-agent"],
@@ -10,5 +10,3 @@ async function logUserIn(userId, request, reply) {
 
     await refreshTokens(sessionToken, userId, reply);
 }
-
-module.exports = { logUserIn };

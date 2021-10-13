@@ -1,10 +1,10 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 const JWTSignature = process.env.JWT_SIGNATURE;
 
-async  function logUserOut(request, reply) {
+export async function logUserOut(request, reply) {
     try {
-        const { session } = await require("../sessions/sessions");
+        const { session } = await require("../sessions/sessions.mjs");
 
         if (request?.cookies?.refreshToken) {
             const { refreshToken } = request.cookies;
@@ -17,5 +17,3 @@ async  function logUserOut(request, reply) {
         console.error(e);
     }
 }
-
-module.exports = { logUserOut };

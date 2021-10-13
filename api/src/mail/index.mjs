@@ -1,6 +1,6 @@
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer";
 
-class MailSender {
+export class MailSender {
     static testAccount;
     static transporter;
 
@@ -31,5 +31,3 @@ class MailSender {
         }
     }
 }
-
-module.exports = { MailSender };

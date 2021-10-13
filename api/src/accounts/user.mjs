@@ -1,13 +1,13 @@
-const jwt = require("jsonwebtoken");
-const { ObjectId } = require("mongodb");
-const { createTokens } = require("./tokens");
+import jwt from "jsonwebtoken";
+import { ObjectId } from "mongodb";
+import { createTokens } from "./tokens.mjs";
 
 const { ROOT_DOMAIN, JWT_SIGNATURE } = process.env;
 
-async function getUserFromCookies(request, reply) {
+export async function getUserFromCookies(request, reply) {
     try {
         const { user } = await require("../user/user");
-        const { session } = await require("../sessions/sessions");
+        const { session } = await require("../sessions/sessions.mjs");
 
         if (request?.cookies?.accessToken) {
             const { accessToken } = request.cookies;
@@ -35,7 +35,7 @@ async function getUserFromCookies(request, reply) {
     }
 }
 
-async function refreshTokens(sessionToken, userId, reply) {
+export async function refreshTokens(sessionToken, userId, reply) {
     try {
         const { accessToken, refreshToken } = await createTokens(sessionToken, userId);
 
@@ -59,5 +59,3 @@ async function refreshTokens(sessionToken, userId, reply) {
         console.error(e);
     }
 }
-
-module.exports = { getUserFromCookies, refreshTokens };

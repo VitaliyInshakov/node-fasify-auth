@@ -2,9 +2,10 @@
   "name": "ui",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "src/index.mjs",
+  "type": "module",
   "scripts": {
-    "start": "nodemon src/index.js"
+    "start": "nodemon src/index.mjs"
   },
   "author": "",
   "license": "ISC",

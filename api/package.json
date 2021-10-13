@@ -2,9 +2,10 @@
   "name": "node-auth",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "src/index.mjs",
+  "type": "module",
   "scripts": {
-    "start:api": "nodemon src/index.js",
+    "start:api": "nodemon src/index.mjs",
     "start:ui": "cd ../ui && yarn start",
     "start:proxy": "caddy run",
     "start:all": "concurrently -c \"magenta.bold,green.bold\" -n \"UI,API\" \"yarn start:ui\" \"yarn start:api\""

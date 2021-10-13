@@ -1,19 +1,23 @@
-require("./env");
-const fastify = require("fastify");
-const fastifyStatic = require("fastify-static");
-const fastifyCookie = require("fastify-cookie");
-const fastifyCors = require("fastify-cors");
-const path = require("path");
-const { connectDb } = require("./db");
-const { registerUser } = require("./accounts/register");
-const { loginUser } = require("./accounts/login");
-const { logUserIn } = require("./accounts/logUserIn");
-const { logUserOut } = require("./accounts/logUserOut");
-const { getUserFromCookies } = require("./accounts/user");
-const { createVerifyEmailLink } = require("./accounts/verify");
-const { MailSender } = require("./mail");
+import "./env.mjs"
+import fastify from"fastify";
+import fastifyStatic from "fastify-static";
+import fastifyCookie from "fastify-cookie";
+import fastifyCors from "fastify-cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import { connectDb } from "./db.mjs";
+import { registerUser }from "./accounts/register.mjs";
+import { loginUser }from "./accounts/login.mjs";
+import { logUserIn }from "./accounts/logUserIn.mjs";
+import { logUserOut }from "./accounts/logUserOut.mjs";
+import { getUserFromCookies }from "./accounts/user.mjs";
+import { createVerifyEmailLink }from "./accounts/verify.mjs";
+import { MailSender }from "./mail/index.mjs";
 
 const app = fastify();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 async function startApp() {
     try {

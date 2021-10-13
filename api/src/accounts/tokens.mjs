@@ -1,8 +1,8 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 const JWTSignature = process.env.JWT_SIGNATURE;
 
-async function createTokens(sessionToken, userId) {
+export async function createTokens(sessionToken, userId) {
     try {
         const refreshToken = jwt.sign({
             sessionToken
@@ -18,5 +18,3 @@ async function createTokens(sessionToken, userId) {
         console.error(e);
     }
 }
-
-module.exports = { createTokens };

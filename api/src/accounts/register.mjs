@@ -1,6 +1,6 @@
-const bcrypt = require("bcryptjs");
+import bcrypt from "bcryptjs";
 
-async function registerUser(email, password) {
+export async function registerUser(email, password) {
     const { user } = await require("../user/user");
 
     const salt = await bcrypt.genSalt(10);
@@ -16,5 +16,3 @@ async function registerUser(email, password) {
 
     return result.insertedId;
 }
-
-module.exports = { registerUser };

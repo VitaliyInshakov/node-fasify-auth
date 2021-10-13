@@ -1,10 +1,10 @@
-const { randomBytes } = require("crypto");
+import { randomBytes } from "crypto";
 
-async function createSession(userId, connection) {
+export async function createSession(userId, connection) {
     try {
         const sessionToken = randomBytes(43).toString("hex");
         const { ip, userAgent } = connection;
-        const { session } = await require("../sessions/sessions");
+        const { session } = await require("../sessions/sessions.mjs");
 
         await session.insertOne({
             sessionToken,
@@ -21,5 +21,3 @@ async function createSession(userId, connection) {
         throw new Error("Session created failed");
     }
 }
-
-module.exports = { createSession };

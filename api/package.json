@@ -2,14 +2,18 @@
   "name": "node-auth",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "nodemon src/index.js"
+    "start:api": "nodemon src/index.js",
+    "start:ui": "cd ../ui && yarn start",
+    "start:proxy": "caddy run",
+    "start:all": "concurrently -c \"magenta.bold,green.bold\" -n \"UI,API\" \"yarn start:ui\" \"yarn start:api\""
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "concurrently": "^6.3.0",
     "dotenv": "^10.0.0",
     "fastify": "^3.20.2",
     "fastify-cookie": "^5.3.1",

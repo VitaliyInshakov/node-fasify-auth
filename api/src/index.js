@@ -10,12 +10,15 @@ const { loginUser } = require("./accounts/login");
 const { logUserIn } = require("./accounts/logUserIn");
 const { logUserOut } = require("./accounts/logUserOut");
 const { getUserFromCookies } = require("./accounts/user");
-const { MailSender } = require("./mail/index");
+const { createVerifyEmailLink } = require("./accounts/verify");
+const { MailSender } = require("./mail");
 
 const app = fastify();
 
 async function startApp() {
     try {
+        await MailSender.init();
+
         app.register(fastifyCors, {
             origin: [
                 /\.nodeauth.dev/,
@@ -36,6 +39,13 @@ async function startApp() {
             try {
                 const userId = await registerUser(request.body.email, request.body.password);
                 if (userId) {
+                    const emailLink = await createVerifyEmailLink(request.body.email);
+                    await MailSender.sendEmail({
+                        to: request.body.email,
+                        subject: "Verify your email",
+                        html: `<a href="${emailLink}">Verify</a>`,
+                    });
+
                     await loginUser(request.body.email, request.body.password);
                     reply.send({ data: { status: "SUCCESS", userId } });
                 }

@@ -1,13 +1,14 @@
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
+import bcrypt from "bcryptjs";
 import { createTokens } from "./tokens.mjs";
 
 const { ROOT_DOMAIN, JWT_SIGNATURE } = process.env;
 
 export async function getUserFromCookies(request, reply) {
     try {
-        const { user } = await require("../user/user");
-        const { session } = await require("../sessions/sessions.mjs");
+        const { user } = await import("../user/user.mjs");
+        const { session } = await import("../sessions/sessions.mjs");
 
         if (request?.cookies?.accessToken) {
             const { accessToken } = request.cookies;
@@ -55,6 +56,20 @@ export async function refreshTokens(sessionToken, userId, reply) {
                 httpOnly: true,
                 secure: true,
             });
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+export async function changePassword(userId, newPassword) {
+    try {
+        const { user } = await import("../user/user.mjs");
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        return user.updateOne({
+            _id: userId,
+        }, { $set: { password:  hashedPassword } });
     } catch (e) {
         console.error(e);
     }

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 
 export async function loginUser(email, password) {
-    const { user } = await require("../user/user");
+    const { user } = await import("../user/user.mjs");
 
     const userData = await user.findOne({
         "email.address": email,

@@ -11,8 +11,8 @@ import { registerUser }from "./accounts/register.mjs";
 import { loginUser }from "./accounts/login.mjs";
 import { logUserIn }from "./accounts/logUserIn.mjs";
 import { logUserOut }from "./accounts/logUserOut.mjs";
-import { getUserFromCookies }from "./accounts/user.mjs";
-import { createVerifyEmailLink }from "./accounts/verify.mjs";
+import { getUserFromCookies, changePassword }from "./accounts/user.mjs";
+import { createVerifyEmailLink, validateVerifyEmail }from "./accounts/verify.mjs";
 import { MailSender }from "./mail/index.mjs";
 
 const app = fastify();
@@ -100,6 +100,39 @@ async function startApp() {
                 }
             } catch (e) {
                 console.error(e);
+            }
+        });
+
+        app.post("/api/verify", async (request, reply) => {
+            try {
+                const { email, token } = request.body;
+                const isValid = await validateVerifyEmail(token, email);
+                if (isValid) {
+                    return reply.code(200).send();
+                }
+
+                return reply.code(401).send();
+            } catch (e) {
+                console.error(e);
+                return reply.code(401).send();
+            }
+        });
+
+        app.post("/api/change-password", async (request, reply) => {
+            try {
+                const user = await getUserFromCookies(request, reply);
+                if (user?.email?.address) {
+                    const { isAuthorized, userId } = await loginUser(user.email.address, request.body.oldPassword);
+                    if (isAuthorized) {
+                        await changePassword(userId, request.body.newPassword);
+                        return reply.code(200).send();
+                    }
+                }
+
+                return reply.code(401).send();
+            } catch (e) {
+                console.error(e);
+                return reply.code(401).send();
             }
         });
 

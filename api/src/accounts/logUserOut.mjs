@@ -4,7 +4,7 @@ const JWTSignature = process.env.JWT_SIGNATURE;
 
 export async function logUserOut(request, reply) {
     try {
-        const { session } = await require("../sessions/sessions.mjs");
+        const { session } = await import("../sessions/sessions.mjs");
 
         if (request?.cookies?.refreshToken) {
             const { refreshToken } = request.cookies;

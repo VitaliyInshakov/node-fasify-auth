@@ -4,7 +4,7 @@ export async function createSession(userId, connection) {
     try {
         const sessionToken = randomBytes(43).toString("hex");
         const { ip, userAgent } = connection;
-        const { session } = await require("../sessions/sessions.mjs");
+        const { session } = await import("../sessions/sessions.mjs");
 
         await session.insertOne({
             sessionToken,

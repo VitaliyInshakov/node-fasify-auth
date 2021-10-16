@@ -29,6 +29,23 @@
 <hr />
 <br />
 
+<h3>Change Password</h3>
+<form id="change-form">
+    <label for="oldPassword">
+        Old Password
+        <input type="password" name="oldPassword">
+    </label>
+    <label for="newPassword">
+        New Password
+        <input type="password" name="newPassword">
+    </label>
+    <button type="submit">Change Password</button>
+</form>
+
+<br />
+<hr />
+<br />
+
 <button onclick="logout()">Log Out</button>
 
 <script>
@@ -44,7 +61,7 @@
                     return acc;
                 }, {});
 
-                const res = await fetch("https://api.nodeauth.dev/api/register", {
+                await fetch("https://api.nodeauth.dev/api/register", {
                     method: "POST",
                     body: JSON.stringify(values),
                     credentials: "include",
@@ -68,7 +85,31 @@
                     return acc;
                 }, {});
 
-                const res = await fetch("https://api.nodeauth.dev/api/login", {
+                await fetch("https://api.nodeauth.dev/api/login", {
+                    method: "POST",
+                    body: JSON.stringify(values),
+                    credentials: "include",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        const changeForm = document.getElementById("change-form");
+        changeForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            try {
+                const values = Object.values(changeForm).reduce((acc, field) => {
+                    if (field.name) {
+                        acc[field.name] = field.value;
+                    }
+                    return acc;
+                }, {});
+
+                await fetch("https://api.nodeauth.dev/api/change-password", {
                     method: "POST",
                     body: JSON.stringify(values),
                     credentials: "include",

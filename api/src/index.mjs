@@ -13,6 +13,7 @@ import { logUserIn }from "./accounts/logUserIn.mjs";
 import { logUserOut }from "./accounts/logUserOut.mjs";
 import { getUserFromCookies, changePassword }from "./accounts/user.mjs";
 import { createVerifyEmailLink, validateVerifyEmail }from "./accounts/verify.mjs";
+import { createResetLink }from "./accounts/reset.mjs";
 import { MailSender }from "./mail/index.mjs";
 
 const app = fastify();
@@ -130,6 +131,26 @@ async function startApp() {
                 }
 
                 return reply.code(401).send();
+            } catch (e) {
+                console.error(e);
+                return reply.code(401).send();
+            }
+        });
+
+        app.post("/api/forgot-password", async (request, reply) => {
+            try {
+                const { email } = request.body;
+                const link = await createResetLink(email);
+
+                if (link) {
+                    await MailSender.sendEmail({
+                        to: email,
+                        subject: "Reset your password",
+                        html: `<a href="${link}">Reset</a>`,
+                    });
+                }
+
+                return reply.code(200).send();
             } catch (e) {
                 console.error(e);
                 return reply.code(401).send();

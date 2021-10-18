@@ -40,6 +40,10 @@ async function startApp() {
             }
         });
 
+        app.get("/reset/:email/:exp/:token", async (request, reply) => {
+            return reply.sendFile("reset.html");
+        });
+
         await app.listen(5000);
         console.log("Server listening at port: 5000");
     } catch (e) {

@@ -15,7 +15,7 @@ async function startApp() {
             root: path.join(__dirname, "public"),
         });
 
-        app.get("/verify/:email/:token", async (request, reply) => {
+        app.get("/verify/:email/:token", {}, async (request, reply) => {
             try {
                 const { email, token } = request.params;
                 const httpsAgent = new https.Agent({
@@ -40,8 +40,12 @@ async function startApp() {
             }
         });
 
-        app.get("/reset/:email/:exp/:token", async (request, reply) => {
+        app.get("/reset/:email/:exp/:token", {}, async (request, reply) => {
             return reply.sendFile("reset.html");
+        });
+
+        app.get("/2fa", {}, async (request, reply) => {
+            return reply.sendFile("2fa.html");
         });
 
         await app.listen(5000);

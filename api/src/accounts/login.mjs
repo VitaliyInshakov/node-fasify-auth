@@ -7,6 +7,10 @@ export async function loginUser(email, password) {
         "email.address": email,
     });
 
-    const isAuthorized = await bcrypt.compare(password, userData.password);
-    return { isAuthorized, userId: userData._id };
+    if (userData) {
+        const isAuthorized = await bcrypt.compare(password, userData.password);
+        return { isAuthorized, userId: userData._id, totp: userData.totp };
+    }
+
+    return { isAuthorized: false, userId: null, totp: null };
 }

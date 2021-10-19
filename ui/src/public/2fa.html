@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA Authenticator</title>
+    <script src="https://unpkg.com/qrcode@1.4.4/build/qrcode.min.js"></script>
+    <script src="https://unpkg.com/@otplib/preset-browser@12.0.1/buffer.js"></script>
+    <script src="https://unpkg.com/@otplib/preset-browser@12.0.1/index.js"></script>
+</head>
+<body>
+    <h2>2FA</h2>
+    <div id="qr"></div>
+
+    <form id="token">
+        <label for="token">
+            <input type="text" name="token" />
+        </label>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        function getValues(form) {
+            return Object.values(form).reduce((acc, field) => {
+                if (field.name) {
+                    acc[field.name] = field.value;
+                }
+                return acc;
+            }, {});
+        }
+
+        ;(async () => {
+            const { otplib, QRCode } = window;
+            const userResponse = await fetch("https://api.nodeauth.dev/api/user", {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
+            });
+
+            const userData = await userResponse.json();
+            if (userData?.data?.user) {
+                const secret = otplib.authenticator.generateSecret();
+                const otpauth = otplib.authenticator.keyuri(userData.data.user.email.address, "service", secret);
+                const imgUrl = await QRCode.toDataURL(otpauth);
+
+                const qrWrapper = document.getElementById("qr");
+                const qr = document.createElement("img");
+                qr.src = imgUrl;
+                qrWrapper.appendChild(qr);
+
+                const tokenForm = document.getElementById("token");
+                tokenForm.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    try {
+                        const values = { ...getValues(tokenForm), secret };
+
+                        await fetch("https://api.nodeauth.dev/api/2fa-register", {
+                            method: "POST",
+                            body: JSON.stringify(values),
+                            credentials: "include",
+                            headers: {
+                                "Content-type": "application/json; charset=UTF-8",
+                            },
+                        });
+                    } catch (e) {
+                        console.error(e);
+                    }
+                });
+            }
+        })()
+    </script>
+</body>
+</html>

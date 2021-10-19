@@ -5,13 +5,14 @@ import fastifyCookie from "fastify-cookie";
 import fastifyCors from "fastify-cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import { authenticator } from "@otplib/preset-default";
 
 import { connectDb } from "./db.mjs";
 import { registerUser }from "./accounts/register.mjs";
 import { loginUser }from "./accounts/login.mjs";
 import { logUserIn }from "./accounts/logUserIn.mjs";
 import { logUserOut }from "./accounts/logUserOut.mjs";
-import { getUserFromCookies, changePassword }from "./accounts/user.mjs";
+import { getUserFromCookies, changePassword, register2FA }from "./accounts/user.mjs";
 import { createVerifyEmailLink, validateVerifyEmail }from "./accounts/verify.mjs";
 import { createResetLink, validateResetEmail }from "./accounts/reset.mjs";
 import { MailSender }from "./mail/index.mjs";
@@ -40,6 +41,24 @@ async function startApp() {
             secret: process.env.COOKIE_SIGNATURE,
         });
 
+        app.get("/api/user", {}, async (request, reply) => {
+            try {
+                const user = await getUserFromCookies(request, reply);
+
+                if (user?._id) {
+                    reply.send({
+                        data: user,
+                    });
+                } else {
+                    reply.send({
+                        data: "User Lookup Failed",
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
         app.post("/api/register", {}, async (request, reply) => {
             try {
                 const userId = await registerUser(request.body.email, request.body.password);
@@ -63,20 +82,23 @@ async function startApp() {
 
         app.post("/api/login", {}, async (request, reply) => {
             try {
-                const { isAuthorized, userId } = await loginUser(request.body.email, request.body.password);
+                const { isAuthorized, userId, totp } = await loginUser(request.body.email, request.body.password);
 
-                if (isAuthorized)  {
+                if (isAuthorized && !totp)  {
                     await logUserIn(userId, request, reply);
                     reply.send({ data: { status: "SUCCESS", userId } });
+                } else if (isAuthorized && totp) {
+                    reply.send({ data: { status: "2FA" } });
                 }
 
-                reply.send({ data: { status: "FAILED"} });
+                reply.code(401).send({ data: { status: "FAILED"} });
             } catch (e) {
                 console.error(e);
+                reply.code(401).send({ data: { status: "FAILED"} });
             }
         });
 
-        app.post("/api/logout", async (request, reply) => {
+        app.post("/api/logout", {}, async (request, reply) => {
             try {
                 await logUserOut(request, reply);
                 reply.send({ data: { status: "SUCCESS" } });
@@ -86,58 +108,40 @@ async function startApp() {
             }
         });
 
-        app.get("/test", {}, async (request, reply) => {
-            try {
-                const user = await getUserFromCookies(request, reply);
-
-                if (user?._id) {
-                    reply.send({
-                        data: user,
-                    });
-                } else {
-                    reply.send({
-                        data: "User Lookup Failed",
-                    });
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        });
-
-        app.post("/api/verify", async (request, reply) => {
+        app.post("/api/verify", {}, async (request, reply) => {
             try {
                 const { email, token } = request.body;
                 const isValid = await validateVerifyEmail(token, email);
                 if (isValid) {
-                    return reply.code(200).send();
+                    reply.code(200).send();
                 }
 
-                return reply.code(401).send();
+                reply.code(401).send();
             } catch (e) {
                 console.error(e);
-                return reply.code(401).send();
+                reply.code(401).send();
             }
         });
 
-        app.post("/api/change-password", async (request, reply) => {
+        app.post("/api/change-password", {}, async (request, reply) => {
             try {
                 const user = await getUserFromCookies(request, reply);
                 if (user?.email?.address) {
                     const { isAuthorized, userId } = await loginUser(user.email.address, request.body.oldPassword);
                     if (isAuthorized) {
                         await changePassword(userId, request.body.newPassword);
-                        return reply.code(200).send();
+                        reply.code(200).send();
                     }
                 }
 
-                return reply.code(401).send();
+                reply.code(401).send();
             } catch (e) {
                 console.error(e);
-                return reply.code(401).send();
+                reply.code(401).send();
             }
         });
 
-        app.post("/api/forgot-password", async (request, reply) => {
+        app.post("/api/forgot-password", {}, async (request, reply) => {
             try {
                 const { email } = request.body;
                 const link = await createResetLink(email);
@@ -150,14 +154,14 @@ async function startApp() {
                     });
                 }
 
-                return reply.code(200).send();
+                reply.code(200).send();
             } catch (e) {
                 console.error(e);
-                return reply.code(401).send();
+                reply.code(401).send();
             }
         });
 
-        app.post("/api/reset-password", async (request, reply) => {
+        app.post("/api/reset-password", {}, async (request, reply) => {
             try {
                 const { email, password, token, time } = request.body;
                 const isValid = await validateResetEmail(token, email, time);
@@ -168,14 +172,50 @@ async function startApp() {
 
                     if (foundUser) {
                         await changePassword(foundUser._id, password);
-                        return reply.code(200).send("Password Updated");
+                        reply.code(200).send("Password Updated");
                     }
                 }
 
-                return reply.code(401).send();
+                reply.code(401).send();
             } catch (e) {
                 console.error(e);
-                return reply.code(401).send();
+                reply.code(401).send();
+            }
+        });
+
+        app.post("/api/2fa-register", {}, async (request, reply) => {
+            try {
+                const user = await getUserFromCookies(request, reply);
+                const { token, secret } = request.body;
+
+                const isValid = authenticator.verify({ token, secret });
+                if (isValid && user?._id) {
+                    await register2FA(user._id, secret);
+                    reply.code(200).send("Success");
+                }
+
+                reply.code(401).send();
+            } catch (e) {
+                console.error(e);
+                reply.code(401).send();
+            }
+        });
+
+        app.post("/api/verify-2fa", {}, async (request, reply) => {
+            try {
+                const { token, email, password } = request.body;
+                const { isAuthorized, userId, totp } = await loginUser(email, password);
+
+                const isValid = authenticator.verify({ token, secret: totp });
+                if (isValid && userId && isAuthorized) {
+                    await logUserIn(userId, request, reply);
+                    reply.code(200).send("Success");
+                }
+
+                reply.code(401).send();
+            } catch (e) {
+                console.error(e);
+                reply.code(401).send();
             }
         });
 

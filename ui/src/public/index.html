@@ -25,6 +25,14 @@
     <button type="submit">Log In</button>
 </form>
 
+<h4>2FA Token</h4>
+<form id="auth-token">
+    <label for="token">
+        <input type="text" name="token" />
+    </label>
+    <button type="submit">Submit</button>
+</form>
+
 <br />
 <hr />
 <br />
@@ -88,7 +96,7 @@
             try {
                 const values = getValues(loginForm);
 
-                await fetch("https://api.nodeauth.dev/api/login", {
+                const res = await fetch("https://api.nodeauth.dev/api/login", {
                     method: "POST",
                     body: JSON.stringify(values),
                     credentials: "include",
@@ -96,6 +104,27 @@
                         "Content-type": "application/json; charset=UTF-8",
                     },
                 });
+
+                const loginData = await res.json();
+                if (loginData.data.status === "2FA") {
+                    const authToken = document.getElementById("auth-token");
+                    authToken.addEventListener("submit", async (e) => {
+                        e.preventDefault();
+                        try {
+                            const tokenValues = getValues(authToken);
+                            const res = await fetch("https://api.nodeauth.dev/api/verify-2fa", {
+                                method: "POST",
+                                body: JSON.stringify({ ...values, ...tokenValues }),
+                                credentials: "include",
+                                headers: {
+                                    "Content-type": "application/json; charset=UTF-8",
+                                },
+                            });
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    });
+                }
             } catch (e) {
                 console.error(e);
             }

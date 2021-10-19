@@ -74,3 +74,15 @@ export async function changePassword(userId, newPassword) {
         console.error(e);
     }
 }
+
+export async function register2FA(userId, secret) {
+    try {
+        const { user } = await import("../user/user.mjs");
+
+        return user.updateOne({
+            _id: userId,
+        }, { $set: { totp:  secret } });
+    } catch (e) {
+        console.error(e);
+    }
+}
